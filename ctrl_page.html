@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>マイクラサーバーコンパネ</title>
+    <style>
+        .container {
+            display: flex;
+            justify-content: center;
+            position: relative;
+        }
+        .center {
+            text-align: center;
+        }
+        textarea {
+            width: 95%;
+            height: 300px;
+        }
+        button {
+            border: 0;
+        }
+        button:active {
+            background-color: #cfcfcf;
+        }
+        button:disabled{
+            color: black;
+        }
+        button.error {
+            background-color: #ff5959;
+        }
+        button.success {
+            background-color: #76db9d;
+        }
+        button.btn_fade {
+            animation-delay: 1.5s;
+            animation-duration: 1.5s;
+            animation-name: btn_fade;
+        }
+
+        @keyframes btn_fade {
+            to {
+                background-color: #F0F0F0;
+            }
+        }
+
+
+        dialog::backdrop {
+            background: hsl(0 0% 10% / 0.5);
+        }
+        :modal{
+            border: 4px solid #52e4ff;
+            box-shadow: 3px 3px 10px rgba(0 0 0 / 0.5);
+        }
+        .bg_blue{
+            background-color: #91bbff;
+        }
+        .hidden{
+            visibility: hidden;
+        }
+    </style>
+</head>
+<body>
+    <h1>マイクラサーバーコンパネ</h1>
+    <h2 id="sub" onclick="switchsub()">サブサーバー ▼</h2>
+    <div id="sub_content" class="hidden">
+        <input type="checkbox" id="autoreload" onchange="autoreload_changed()"><label for="autoreload">ステータス自動更新</label>
+
+        <h3>ステータス<button onclick="getstatus()" id="status_btn">更新</button></h3>
+        <p id="status_text">&#x26AA;</p>
+
+        <button onclick="startserver()" id="start_btn">起動</button>
+
+        <button onclick="stopserver()" id="stop_btn">停止</button>
+        <br><br>
+
+        <button onclick="getworlds()" id="worlds_btn">ワールド一覧確認</button>
+        <ol id="worlds_list" start="0"></ol>
+
+        <button onclick="changeworld()" id="change_btn">ワールド変更</button>
+        <input type="number" id="change_id">
+        <br><br>
+
+        <button onclick="getlogs()" id="logs_btn">ログ取得</button>
+        <input type="checkbox" id="getlatest"><label for="getlatest">直近のログのみ</label>
+        <textarea id="logs_textarea" readonly></textarea>
+    </div>
+
+    <dialog id="modal">
+        <div id="modal_content">
+            <h1 id="modal_title" style="font-size: 24px;">サーバー起動</h1>
+            <p id="modal_text">起動しました</p>
+            <button id="close_btn" onclick="closemodal()">閉じる</button>
+        </div>
+    </dialog>
+
+
+    <script>
+        getstatus()
+        function switchsub() {
+            document.getElementById("sub_content").classList.toggle("hidden")
+        }
+        function getstatus(server, text_id) {
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", "https://chubu-jhs.com/mcserver-ctrl/api/status", true);
+            xhr.onreadystatechange = function () {
+                // readyState4=(結果の可否に関わらず)操作完了 じゃなければreturn
+                if (xhr.readyState != 4) return;
+                if (xhr.status == 0) {console.log("サーバーにアクセスできません")}
+                if (xhr.status != 200) {console.log("サーバー側での処理に失敗しました")}
+
+                const data_obj = JSON.parse(xhr.responseText);
+                console.log(data_obj)
+                if (data_obj.status == "stopped") {
+                    document.getElementById("status_text").innerHTML="&#x1F534;停止"
+                } else {
+                    document.getElementById("status_text").innerHTML=`&#x1F7E2;稼働中 : ${data_obj.status}`
+                }
+            };
+            xhr.send()   
+        }
+
+        function startserver() {
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", "https://chubu-jhs.com/mcserver-ctrl/api/start", true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState != 4) return;
+                if (xhr.status == 0) {console.log("サーバーにアクセスできません")}
+                if (xhr.status != 200) {console.log("サーバー側での処理に失敗しました");setbtncolor("start_btn", "error")}
+
+                const data_obj = JSON.parse(xhr.responseText);
+                console.log(data_obj)
+                switch (data_obj.status) {
+                    case "error":
+                        setbtncolor("start_btn", "error")
+                        openmodal("サーバー起動", "&#x274C;コンパネサーバーでエラーが発生しました")
+                        break;
+                    case "working":
+                        setbtncolor("start_btn", "error")
+                        openmodal("サーバー起動", "&#x274C;すでに起動しています")
+                        break;
+                    case "start":
+                        setbtncolor("start_btn", "success")
+                        openmodal("サーバー起動", "&#x2705;起動しました")
+                        getstatus()
+                        break;
+                
+                    default:
+                        break;
+                }
+            };
+            xhr.send()   
+        }
+
+        function stopserver() {
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", "https://chubu-jhs.com/mcserver-ctrl/api/stop", true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState != 4) return;
+                if (xhr.status == 0) {console.log("サーバーにアクセスできません")}
+                if (xhr.status != 200) {console.log("サーバー側での処理に失敗しました");setbtncolor("stop_btn", "error")}
+
+                const data_obj = JSON.parse(xhr.responseText);
+                console.log(data_obj)
+                switch (data_obj.status) {
+                    case "error":
+                        setbtncolor("stop_btn", "error")
+                        openmodal("サーバー停止", "&#x274C;コンパネサーバーでエラーが発生しました")
+                        break;
+                    case "stopped":
+                        setbtncolor("stop_btn", "error")
+                        openmodal("サーバー停止", "&#x274C;すでに停止しています")
+                        break;
+                    case "stop":
+                        setbtncolor("stop_btn", "success")
+                        openmodal("サーバー停止", "&#x2705;停止処理中です")
+                        setTimeout(() => {
+                            // BDSの終了処理待ってから状態更新
+                            getstatus()
+                        }, 5000);
+                        break;
+                
+                    default:
+                        break;
+                }
+            };
+            xhr.send()   
+        }
+
+        function getworlds() {
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", "https://chubu-jhs.com/mcserver-ctrl/api/worlds", true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState != 4) return;
+                if (xhr.status == 0) {console.log("サーバーにアクセスできません")}
+                if (xhr.status != 200) {console.log("サーバー側での処理に失敗しました");setbtncolor("worlds_btn", "error")}
+
+                const data_obj = JSON.parse(xhr.responseText);
+                console.log(data_obj)
+                switch (data_obj.status) {
+                    case "error":
+                        setbtncolor("worlds_btn", "error")
+                        openmodal("ワールド一覧確認", "&#x274C;コンパネサーバーでエラーが発生しました")
+                        break;
+                    case "success":
+                        setbtncolor("worlds_btn", "success")
+                        const worlds_ol = document.getElementById('worlds_list');
+                        worlds_ol.innerHTML = ""
+                        const worlds_list = data_obj.worlds
+                        worlds_list.pop()
+                        worlds_list.forEach(world => {
+                            const worlds_li = document.createElement('li')
+                            const worlds_li_text = document.createTextNode(world);
+                            if (data_obj.world == world) {
+                                const worlds_li_span = document.createElement("span")
+                                worlds_li_span.classList.add("bg_blue")
+                                
+                                worlds_li_span.appendChild(worlds_li_text)
+                                worlds_li.appendChild(worlds_li_span);
+                            } else {
+                                worlds_li.appendChild(worlds_li_text);
+                            }
+                            worlds_ol.appendChild(worlds_li);
+                        });
+                        break;
+                
+                    default:
+                        break;
+                }
+            };
+            xhr.send()   
+        }
+
+        function changeworld() {
+            const worldid = document.getElementById("change_id").value
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", `https://chubu-jhs.com/mcserver-ctrl/api/change?worldindex=${worldid}`, true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState != 4) return;
+                if (xhr.status == 0) {console.log("サーバーにアクセスできません")}
+                if (xhr.status != 200) {console.log("サーバー側での処理に失敗しました");setbtncolor("change_btn", "error")}
+
+                const data_obj = JSON.parse(xhr.responseText);
+                console.log(data_obj)
+                switch (data_obj.status) {
+                    case "error":
+                        setbtncolor("change_btn", "error")
+                        openmodal("ワールド変更", "&#x274C;コンパネサーバーでエラーが発生しました")
+                        break;
+                    case "working":
+                        setbtncolor("change_btn", "error")
+                        openmodal("ワールド変更", "&#x274C;サーバーが起動しています")
+                        break;
+                    case "notfound":
+                        setbtncolor("change_btn", "error")
+                        openmodal("ワールド変更", "&#x274C;ワールドが見つかりません")
+                        break;
+                    case "changed":
+                        setbtncolor("change_btn", "success")
+                        openmodal("ワールド変更", `&#x2705;変更完了:${data_obj.world}`)
+                        break;
+                
+                    default:
+                        break;
+                }
+            };
+            xhr.send()   
+        }
+
+        function getlogs() {
+            let logs_scope="";
+            if (document.getElementById("getlatest").checked == false) {
+                logs_scope="all"
+            }
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", `https://chubu-jhs.com/mcserver-ctrl/api/logs?scope=${logs_scope}`, true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState != 4) return;
+                if (xhr.status == 0) {console.log("サーバーにアクセスできません")}
+                if (xhr.status != 200) {console.log("サーバー側での処理に失敗しました");setbtncolor("logs_btn", "error")}
+
+                const data_obj = JSON.parse(xhr.responseText);
+                console.log(data_obj)
+                switch (data_obj.status) {
+                    case "error":
+                        setbtncolor("logs_btn", "error")
+                        document.getElementById("logs_textarea").innerHTML="&#x1F534;コンパネサーバーでエラーが発生しました"
+                        break;
+                    case "stopped":
+                        setbtncolor("logs_btn", "error")
+                        document.getElementById("logs_textarea").innerHTML="&#x1F534;サーバーが停止しています"
+                        break;
+                    case "success":
+                        setbtncolor("logs_btn", "success")
+                        document.getElementById("logs_textarea").textContent=data_obj.logs
+                        break;
+                
+                    default:
+                        break;
+                }
+            };
+            xhr.send()   
+        }
+
+        let autoreload = null;
+        function autoreload_changed() {
+            if (document.getElementById("autoreload").checked) {
+                if (!autoreload) {
+                    console.log("autoreload on")
+                    autoreload = setInterval(() => {
+                        getstatus()
+                    }, 1500);
+                } else {
+                    console.log("すでにon")
+                }
+            } else {
+                console.log("autoreload off")
+                clearInterval(autoreload)
+                autoreload = null
+            }
+        }
+
+        function setbtncolor(elementId, className) {
+            const element = document.getElementById(elementId)
+            element.setAttribute("disabled", true)
+            element.classList.add(...[className, "btn_fade"])
+            setTimeout(() => {
+                element.classList.remove(...["error","success","btn_fade"])
+                element.removeAttribute("disabled")
+            }, 2900);
+        }
+
+        function closemodal(){
+            document.getElementById("modal").close()
+        }
+        function openmodal(title,text){
+            document.getElementById("modal_title").innerHTML=title
+            document.getElementById("modal_text").innerHTML=text
+            document.getElementById("modal").showModal()
+        }
+
+        // ダイアログの背景クリック時にダイアログ消す
+        const dialog = document.getElementById("modal");
+        
+        dialog.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                dialog.close('cancelled');
+            }
+        });
+    </script>
+</body>
+</html>
