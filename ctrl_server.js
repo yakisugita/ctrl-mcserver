@@ -1,4 +1,4 @@
-const discord = false
+const discord = true
 require('dotenv').config()
 const sv_folder = process.env.FOLDER
 const { execSync, exec } = require('child_process')
@@ -24,7 +24,7 @@ passport.use(new passportHttp.DigestStrategy({ qop: 'auth'} ,
 ));
 
 
-const server = app.listen(8881, function () {
+const server = app.listen(8080, function () {
     console.log("Node.js is listening to PORT:" + server.address().port);
 });
 

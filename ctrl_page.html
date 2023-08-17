@@ -102,7 +102,7 @@
         }
         function getstatus(server, text_id) {
             const xhr = new XMLHttpRequest();
-            xhr.open("GET", "./mcserver-ctrl/api/status", true);
+            xhr.open("GET", "./api/status", true);
             xhr.onreadystatechange = function () {
                 // readyState4=(結果の可否に関わらず)操作完了 じゃなければreturn
                 if (xhr.readyState != 4) return;
@@ -122,7 +122,7 @@
 
         function startserver() {
             const xhr = new XMLHttpRequest();
-            xhr.open("GET", "./mcserver-ctrl/api/start", true);
+            xhr.open("GET", "./api/start", true);
             xhr.onreadystatechange = function () {
                 if (xhr.readyState != 4) return;
                 if (xhr.status == 0) {console.log("サーバーにアクセスできません")}
@@ -154,7 +154,7 @@
 
         function stopserver() {
             const xhr = new XMLHttpRequest();
-            xhr.open("GET", "./mcserver-ctrl/api/stop", true);
+            xhr.open("GET", "./api/stop", true);
             xhr.onreadystatechange = function () {
                 if (xhr.readyState != 4) return;
                 if (xhr.status == 0) {console.log("サーバーにアクセスできません")}
@@ -189,7 +189,7 @@
 
         function getworlds() {
             const xhr = new XMLHttpRequest();
-            xhr.open("GET", "./mcserver-ctrl/api/worlds", true);
+            xhr.open("GET", "./api/worlds", true);
             xhr.onreadystatechange = function () {
                 if (xhr.readyState != 4) return;
                 if (xhr.status == 0) {console.log("サーバーにアクセスできません")}
@@ -234,7 +234,7 @@
         function changeworld() {
             const worldid = document.getElementById("change_id").value
             const xhr = new XMLHttpRequest();
-            xhr.open("GET", `./mcserver-ctrl/api/change?worldindex=${worldid}`, true);
+            xhr.open("GET", `./api/change?worldindex=${worldid}`, true);
             xhr.onreadystatechange = function () {
                 if (xhr.readyState != 4) return;
                 if (xhr.status == 0) {console.log("サーバーにアクセスできません")}
@@ -273,7 +273,7 @@
                 logs_scope="all"
             }
             const xhr = new XMLHttpRequest();
-            xhr.open("GET", `./mcserver-ctrl/api/logs?scope=${logs_scope}`, true);
+            xhr.open("GET", `./api/logs?scope=${logs_scope}`, true);
             xhr.onreadystatechange = function () {
                 if (xhr.readyState != 4) return;
                 if (xhr.status == 0) {console.log("サーバーにアクセスできません")}
