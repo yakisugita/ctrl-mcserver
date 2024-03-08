@@ -9,6 +9,10 @@ const passportHttp = require('passport-http');
 
 const fetch = require("node-fetch")
 
+const multer  = require('multer')
+const maxSize = 20*1000*1000; // 上限20MB
+const upload = multer({ dest: './uploads/', limits: {fileSize: maxSize } })
+
 const app = express();
 
 
@@ -146,6 +150,42 @@ app.get("/mcserver-ctrl/api/:command/", passport.authenticate('digest', {session
             res.send("Unexpected Parameter")
     }
 });
+
+app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate('digest', {session: false}), function (req, res, next) {
+    console.log(req.file)
+    // ファイルがあるかチェック
+    if (req.file == undefined) {
+        res.send("NoFile")
+        return
+    }
+    console.log(req.body.file_name)
+    // 正規表現で英数字,一部記号のみ抽出
+    const matched = req.body.file_name.match(/[A-Za-z-_]/g);
+    if (matched == null) {
+        console.log("ファイル名空白")
+        res.send("Uploaded-NoFileName")
+        return
+    }
+    
+    const world_name = matched.join("")
+    console.log(world_name);
+
+    // 解凍できるかチェック
+    try {
+        const unzipout = execSync(`unzip -q -t ${req.file.path}`)
+        if (unzipout.toString().slice(0, -1) == `No errors detected in compressed data of ${req.file.path}.`) {
+            console.log("解凍チェック通過")
+        } else {
+            console.log("解凍チェックアウト")
+        }
+    } catch (error) {
+        console.log(error.message);
+    }
+
+    res.send("Uploaded")
+});
+
+// unzip -q -t 61889eeca8b81d3d88f971537d9dd566
 
 function isworking() {
     try {
