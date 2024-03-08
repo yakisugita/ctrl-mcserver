@@ -55,15 +55,12 @@
         .bg_blue{
             background-color: #91bbff;
         }
-        .hidden{
-            visibility: hidden;
-        }
     </style>
 </head>
 <body>
     <h1>マイクラサーバーコンパネ</h1>
     <h2 id="sub" onclick="switchsub()">サブサーバー ▼</h2>
-    <div id="sub_content" class="hidden">
+    <div id="sub_content" hidden>
         <input type="checkbox" id="autoreload" onchange="autoreload_changed()"><label for="autoreload">ステータス自動更新</label>
 
         <h3>ステータス<button onclick="getstatus()" id="status_btn">更新</button></h3>
@@ -86,6 +83,17 @@
         <textarea id="logs_textarea" readonly></textarea>
     </div>
 
+    <h2 id="upload" onclick="switchupload()">アップロード ▼</h2>
+    <div id="upload_content">
+        <p><code>.mcworld</code>ファイルのアップロード</p>
+        <form action="/mcserver-ctrl/upload/" method="POST" enctype="multipart/form-data" id="form1">
+            <label for="file_name">ファイル名 (A-Z a-z 0-9 , _ - が使用可)</label>
+            <input type="text" name="file_name" id="file_name" minlength="1" maxlength="64" required><br>
+            <input type="file" name="file" id="file" accept=".mcworld" required><br><br>
+            <button onclick="upload()">アップロード</button>
+        </form>
+    </div>
+
     <dialog id="modal">
         <div id="modal_content">
             <h1 id="modal_title" style="font-size: 24px;">サーバー起動</h1>
@@ -96,10 +104,15 @@
 
 
     <script>
-        getstatus()
+        const sub = document.getElementById("sub_content")
+        const upload_content = document.getElementById("upload_content")
         function switchsub() {
-            document.getElementById("sub_content").classList.toggle("hidden")
+            sub.hidden = !sub.hidden
         }
+        function switchupload() {
+            upload_content.hidden = !upload_content.hidden
+        }
+        getstatus()
         function getstatus(server, text_id) {
             const xhr = new XMLHttpRequest();
             xhr.open("GET", "./api/status", true);
@@ -300,6 +313,59 @@
                 }
             };
             xhr.send()   
+        }
+
+        const file = document.getElementById("file");
+        file.addEventListener('change', (evt) => {
+            const fileIn = evt.target;
+            const file_name = fileIn.files[0].name.split(".mcworld")[0]
+            console.log(file_name)
+        });
+
+        function upload() {
+            const form = document.getElementById("form1");
+            const form_data = new FormData(form);
+
+            const xhr2 = new XMLHttpRequest();
+
+            xhr2.open("POST", "/ctrl-mcserver/upload/");
+            // アップロード関連イベント
+            xhr2.upload.addEventListener('loadstart', (evt) => {
+            // アップロード開始
+            });
+
+            xhr2.upload.addEventListener('progress', (evt) => {
+            // アップロード進行パーセント
+            const percent = (evt.loaded / evt.total * 100).toFixed(1);
+            console.log(`++ xhr2.upload: progress ${percent}%`);
+            });
+
+            xhr2.upload.addEventListener('abort', (evt) => {
+            // アップロード中断
+            console.log('++ xhr2.upload: abort (Upload aborted)');
+            });
+
+            xhr2.upload.addEventListener('error', (evt) => {
+            // アップロードエラー
+            console.log('++ xhr2.upload: error (Upload failed)');
+            });
+
+            xhr2.upload.addEventListener('load', (evt) => {
+            // アップロード正常終了
+            console.log('++ xhr2.upload: load (Upload Completed Successfully)');
+            });
+
+            xhr2.upload.addEventListener('timeout', (evt) => {
+            // アップロードタイムアウト
+            console.log('++ xhr2.upload: timeout');
+            });
+
+            xhr2.upload.addEventListener('loadend', (evt) => {
+            // アップロード終了 (エラー・正常終了両方)
+            console.log('++ xhr2.upload: loadend (Upload Finished)');
+            });
+
+            xhr2.send(form_data);
         }
 
         let autoreload = null;
