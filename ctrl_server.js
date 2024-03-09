@@ -170,16 +170,32 @@ app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate
     const world_name = matched.join("")
     console.log(world_name);
 
-    // 解凍できるかチェック
+    // 正常に解凍できるかチェック (unzip -t)
     try {
         const unzipout = execSync(`unzip -q -t ${req.file.path}`)
         if (unzipout.toString().slice(0, -1) == `No errors detected in compressed data of ${req.file.path}.`) {
             console.log("解凍チェック通過")
         } else {
             console.log("解凍チェックアウト")
+            try {
+                execSync(`rm ${req.file.path}`)
+                res.send("Uploaded-UnzipFailed-Deleted")
+            } catch (error) {
+                console.log(error.message);
+                res.send("Uploaded-UnzipFailed-DeleteFailed")
+            }
+            return
         }
     } catch (error) {
-        console.log(error.message);
+        console.log("解凍チェックエラー")
+        try {
+            execSync(`rm ${req.file.path}`)
+            res.send("Uploaded-UnzipFailed-Deleted")
+        } catch (error) {
+            console.log(error.message);
+            res.send("Uploaded-UnzipFailed-DeleteFailed")
+        }
+        return
     }
 
     res.send("Uploaded")
