@@ -169,13 +169,8 @@ app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate
     const matched = req.body.file_name.match(/[0-9A-Za-z-_]/g);
     if (matched == null) {
         console.log("ファイル名空白")
-        try {
-            fs.unlinkSync(req.file.path);
-            status.delete = true
-            res.send(JSON.stringify(status))
-        } catch(error) {
-            res.send(JSON.stringify(status))
-        }
+        status.delete = delfile(req.file.path)
+        res.send(JSON.stringify(status))
         return
     }
 
@@ -184,13 +179,8 @@ app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate
 
     if (world_name == "") {
         console.log("ファイル名空白")
-        try {
-            fs.unlinkSync(req.file.path);
-            status.delete = true
-            res.send(JSON.stringify(status))
-        } catch(error) {
-            res.send(JSON.stringify(status))
-        }
+        status.delete = delfile(req.file.path)
+        res.send(JSON.stringify(status))
         return
     }
     status.filename = true
@@ -198,14 +188,9 @@ app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate
     // 重複チェック
     try {
         execSync(`ls ${sv_folder}/worlds/${world_name}`)
-        console.log("ディレクトリ名重複")
-        try {
-            fs.unlinkSync(req.file.path);
-            status.delete = true
-            res.send(JSON.stringify(status))
-        } catch(error) {
-            res.send(JSON.stringify(status))
-        }
+        // 重複
+        status.delete = delfile(req.file.path)
+        res.send(JSON.stringify(status))
         return
     } catch (error) {
         console.log("重複チェック通過")
@@ -216,27 +201,16 @@ app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate
     try {
         const unzipout = execSync(`unzip -q -t ${req.file.path}`)
         if (unzipout.toString().slice(0, -1) == `No errors detected in compressed data of ${req.file.path}.`) {
-            console.log("解凍チェック通過")
         } else {
-            console.log("解凍チェックアウト")
-            try {
-                fs.unlinkSync(req.file.path);
-                status.delete = true
-                res.send(JSON.stringify(status))
-            } catch(error) {
-                res.send(JSON.stringify(status))
-            }
+            // 解凍チェックアウト
+            status.delete = delfile(req.file.path)
+            res.send(JSON.stringify(status))
             return
         }
     } catch (error) {
         console.log("解凍チェックエラー")
-        try {
-            fs.unlinkSync(req.file.path);
-            status.delete = true
-            res.send(JSON.stringify(status))
-        } catch(error) {
-            res.send(JSON.stringify(status))
-        }
+        status.delete = delfile(req.file.path)
+        res.send(JSON.stringify(status))
         return
     }
     status.unziptest = true
@@ -244,31 +218,28 @@ app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate
     // 実際に解凍
     try {
         execSync(`unzip -qq -d ${sv_folder}/worlds/${world_name} ${req.file.path}`)
-        console.log("正常に解凍")
     } catch (error) {
         console.log("本番解凍エラー")
-        try {
-            fs.unlinkSync(req.file.path);
-            status.delete = true
-            res.send(JSON.stringify(status))
-        } catch(error) {
-            res.send(JSON.stringify(status))
-        }
+        status.delete = delfile(req.file.path)
+        res.send(JSON.stringify(status))
         return
     }
     status.unzip = true
 
     // 正常終了後ファイル削除
-    try {
-        fs.unlinkSync(req.file.path);
-        console.log("削除成功")
-        status.delete = true
-        res.send(JSON.stringify(status))
-    } catch(error) {
-        console.log("削除失敗")
-        res.send(JSON.stringify(status))
-    }
+    status.delete = delfile(req.file.path)
+    res.send(JSON.stringify(status))
 });
+
+function delfile(path) {
+    // ファイル削除
+    try {
+        fs.unlinkSync(path)
+        return true
+    } catch(error) {
+        return false
+    }
+}
 
 function isworking() {
     try {
