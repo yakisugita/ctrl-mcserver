@@ -384,6 +384,24 @@
 
                 const upload_res = JSON.parse(xhr2.responseText);
                 console.log(upload_res)
+
+                let upload_text = "<table><tbody>"
+                const upload_res_text = {"upload":"アップロード", "filename":"ファイル名チェック", "unique":"重複チェック", "unziptest":"解凍テスト", "unzip":"解凍", "delete":"一時ファイル削除"}
+
+                Object.keys(upload_res_text).forEach((key) => {
+                    if (upload_res[key]) {
+                        upload_text += `<tr><td>${upload_res_text[key]}</td><td>&#x2705;</td></tr>`
+                    } else {
+                        upload_text += `<tr><td>${upload_res_text[key]}</td><td>&#x274C;</td></tr>`
+                    }
+                })
+                upload_text += "</tbody></table>"
+
+                if (Object.values(upload_res) == Array(6).fill(true)) {
+                    openmodal("&#x2705;アップロード", upload_text)
+                } else {
+                    openmodal("&#x274C;アップロード", upload_text)
+                }
             };
 
             xhr2.send(form_data);
