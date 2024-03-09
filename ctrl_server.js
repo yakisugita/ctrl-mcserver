@@ -13,6 +13,8 @@ const multer  = require('multer')
 const maxSize = 20*1000*1000; // 上限20MB
 const upload = multer({ dest: './uploads/', limits: {fileSize: maxSize } })
 
+const fs = require('fs');
+
 const app = express();
 
 
@@ -164,10 +166,9 @@ app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate
     if (matched == null) {
         console.log("ファイル名空白")
         try {
-            execSync(`rm ${req.file.path}`)
+            fs.unlinkSync(req.file.path);
             res.send("Uploaded-NoFileName-Deleted")
-        } catch (error) {
-            console.log(error.message);
+        } catch(error) {
             res.send("Uploaded-NoFileName-DeleteFailed")
         }
         return
@@ -184,10 +185,9 @@ app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate
         } else {
             console.log("解凍チェックアウト")
             try {
-                execSync(`rm ${req.file.path}`)
+                fs.unlinkSync(req.file.path);
                 res.send("Uploaded-UnzipFailed-Deleted")
-            } catch (error) {
-                console.log(error.message);
+            } catch(error) {
                 res.send("Uploaded-UnzipFailed-DeleteFailed")
             }
             return
@@ -195,10 +195,9 @@ app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate
     } catch (error) {
         console.log("解凍チェックエラー")
         try {
-            execSync(`rm ${req.file.path}`)
+            fs.unlinkSync(req.file.path);
             res.send("Uploaded-UnzipFailed-Deleted")
-        } catch (error) {
-            console.log(error.message);
+        } catch(error) {
             res.send("Uploaded-UnzipFailed-DeleteFailed")
         }
         return
