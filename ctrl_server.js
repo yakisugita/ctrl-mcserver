@@ -161,6 +161,7 @@ app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate
         return
     }
     console.log(req.body.file_name)
+    // ファイル名チェック
     // 正規表現で英数字,一部記号のみ抽出
     const matched = req.body.file_name.match(/[A-Za-z-_]/g);
     if (matched == null) {
@@ -173,9 +174,35 @@ app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate
         }
         return
     }
-    
+
     const world_name = matched.join("")
     console.log(world_name);
+
+    if (world_name == "") {
+        console.log("ファイル名空白")
+        try {
+            fs.unlinkSync(req.file.path);
+            res.send("Uploaded-NoFileName-Deleted")
+        } catch(error) {
+            res.send("Uploaded-NoFileName-DeleteFailed")
+        }
+        return
+    }
+
+    // 重複チェック
+    try {
+        execSync(`ls ${sv_folder}/worlds/${world_name}`)
+        console.log("ディレクトリ名重複")
+        try {
+            fs.unlinkSync(req.file.path);
+            res.send("Uploaded-Found-Deleted")
+        } catch(error) {
+            res.send("Uploaded-Found-DeleteFailed")
+        }
+        return
+    } catch (error) {
+        console.log("重複チェック通過")
+    }
 
     // 正常に解凍できるかチェック (unzip -t)
     try {
