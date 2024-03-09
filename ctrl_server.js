@@ -163,7 +163,7 @@ app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate
     console.log(req.body.file_name)
     // ファイル名チェック
     // 正規表現で英数字,一部記号のみ抽出
-    const matched = req.body.file_name.match(/[A-Za-z-_]/g);
+    const matched = req.body.file_name.match(/[0-9A-Za-z-_]/g);
     if (matched == null) {
         console.log("ファイル名空白")
         try {
@@ -213,14 +213,29 @@ app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate
             console.log("解凍チェックアウト")
             try {
                 fs.unlinkSync(req.file.path);
-                res.send("Uploaded-UnzipFailed-Deleted")
+                res.send("Uploaded-UnzipTESTFailed-Deleted")
             } catch(error) {
-                res.send("Uploaded-UnzipFailed-DeleteFailed")
+                res.send("Uploaded-UnzipTESTFailed-DeleteFailed")
             }
             return
         }
     } catch (error) {
         console.log("解凍チェックエラー")
+        try {
+            fs.unlinkSync(req.file.path);
+            res.send("Uploaded-UnzipTESTFailed-Deleted")
+        } catch(error) {
+            res.send("Uploaded-UnzipTESTFailed-DeleteFailed")
+        }
+        return
+    }
+
+    // 実際に解凍
+    try {
+        execSync(`unzip -qq -d ${sv_folder}/worlds/${world_name} ${req.file.path}`)
+        console.log("正常に解凍")
+    } catch (error) {
+        console.log("本番解凍エラー")
         try {
             fs.unlinkSync(req.file.path);
             res.send("Uploaded-UnzipFailed-Deleted")
