@@ -245,7 +245,15 @@ app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate
         return
     }
 
-    res.send("Uploaded")
+    // 正常終了後ファイル削除
+    try {
+        fs.unlinkSync(req.file.path);
+        console.log("削除成功")
+        res.send("Uploaded-Success-Deleted")
+    } catch(error) {
+        console.log("削除失敗")
+        res.send("Uploaded-Success-DeleteFailed")
+    }
 });
 
 // unzip -q -t 61889eeca8b81d3d88f971537d9dd566
