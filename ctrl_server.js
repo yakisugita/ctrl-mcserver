@@ -163,7 +163,13 @@ app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate
     const matched = req.body.file_name.match(/[A-Za-z-_]/g);
     if (matched == null) {
         console.log("ファイル名空白")
-        res.send("Uploaded-NoFileName")
+        try {
+            execSync(`rm ${req.file.path}`)
+            res.send("Uploaded-NoFileName-Deleted")
+        } catch (error) {
+            console.log(error.message);
+            res.send("Uploaded-NoFileName-DeleteFailed")
+        }
         return
     }
     
