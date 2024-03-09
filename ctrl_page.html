@@ -86,12 +86,12 @@
     <h2 id="upload" onclick="switchupload()">アップロード ▼</h2>
     <div id="upload_content">
         <p><code>.mcworld</code>ファイルのアップロード</p>
-        <form action="/mcserver-ctrl/upload/" method="POST" enctype="multipart/form-data" id="form1">
+        <form enctype="multipart/form-data" id="form1">
             <label for="file_name">ファイル名 (A-Z a-z 0-9 , _ - が使用可)</label>
             <input type="text" name="file_name" id="file_name" minlength="1" maxlength="64" required><br>
             <input type="file" name="world" id="file" accept=".mcworld" required><br><br>
-            <button onclick="upload()">アップロード</button>
         </form>
+        <button onclick="upload()">アップロード</button>
     </div>
 
     <dialog id="modal">
@@ -315,11 +315,18 @@
             xhr.send()   
         }
 
+        // ファイル選択
         const file = document.getElementById("file");
         file.addEventListener('change', (evt) => {
             const fileIn = evt.target;
             const file_name = fileIn.files[0].name.split(".mcworld")[0]
             console.log(file_name)
+            // 英数字,一部記号のみ抽出
+            const matched = file_name.match(/[0-9A-Za-z-_]/g);
+            // ファイル名自動入力
+            if (matched != null && document.getElementById("file_name").value == "") {
+                document.getElementById("file_name").value = matched.join("")
+            }
         });
 
         function upload() {
@@ -328,7 +335,7 @@
 
             const xhr2 = new XMLHttpRequest();
 
-            xhr2.open("POST", "/ctrl-mcserver/upload/");
+            xhr2.open("POST", "/mcserver-ctrl/upload/");
             // アップロード関連イベント
             xhr2.upload.addEventListener('loadstart', (evt) => {
             // アップロード開始
