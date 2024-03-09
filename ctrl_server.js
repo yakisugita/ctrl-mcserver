@@ -154,23 +154,27 @@ app.get("/mcserver-ctrl/api/:command/", passport.authenticate('digest', {session
 });
 
 app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate('digest', {session: false}), function (req, res, next) {
+    const status = {"upload":false, "filename":false, "unique":false, "unziptest":false, "unzip":false, "delete":false}
     console.log(req.file)
     // ファイルがあるかチェック
     if (req.file == undefined) {
-        res.send("NoFile")
+        res.send(JSON.stringify(status))
         return
     }
-    console.log(req.body.file_name)
+    status.upload = true
+
     // ファイル名チェック
+    console.log(req.body.file_name)
     // 正規表現で英数字,一部記号のみ抽出
     const matched = req.body.file_name.match(/[0-9A-Za-z-_]/g);
     if (matched == null) {
         console.log("ファイル名空白")
         try {
             fs.unlinkSync(req.file.path);
-            res.send("Uploaded-NoFileName-Deleted")
+            status.delete = true
+            res.send(JSON.stringify(status))
         } catch(error) {
-            res.send("Uploaded-NoFileName-DeleteFailed")
+            res.send(JSON.stringify(status))
         }
         return
     }
@@ -182,12 +186,14 @@ app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate
         console.log("ファイル名空白")
         try {
             fs.unlinkSync(req.file.path);
-            res.send("Uploaded-NoFileName-Deleted")
+            status.delete = true
+            res.send(JSON.stringify(status))
         } catch(error) {
-            res.send("Uploaded-NoFileName-DeleteFailed")
+            res.send(JSON.stringify(status))
         }
         return
     }
+    status.filename = true
 
     // 重複チェック
     try {
@@ -195,14 +201,16 @@ app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate
         console.log("ディレクトリ名重複")
         try {
             fs.unlinkSync(req.file.path);
-            res.send("Uploaded-Found-Deleted")
+            status.delete = true
+            res.send(JSON.stringify(status))
         } catch(error) {
-            res.send("Uploaded-Found-DeleteFailed")
+            res.send(JSON.stringify(status))
         }
         return
     } catch (error) {
         console.log("重複チェック通過")
     }
+    status.unique = true
 
     // 正常に解凍できるかチェック (unzip -t)
     try {
@@ -213,9 +221,10 @@ app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate
             console.log("解凍チェックアウト")
             try {
                 fs.unlinkSync(req.file.path);
-                res.send("Uploaded-UnzipTESTFailed-Deleted")
+                status.delete = true
+                res.send(JSON.stringify(status))
             } catch(error) {
-                res.send("Uploaded-UnzipTESTFailed-DeleteFailed")
+                res.send(JSON.stringify(status))
             }
             return
         }
@@ -223,12 +232,14 @@ app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate
         console.log("解凍チェックエラー")
         try {
             fs.unlinkSync(req.file.path);
-            res.send("Uploaded-UnzipTESTFailed-Deleted")
+            status.delete = true
+            res.send(JSON.stringify(status))
         } catch(error) {
-            res.send("Uploaded-UnzipTESTFailed-DeleteFailed")
+            res.send(JSON.stringify(status))
         }
         return
     }
+    status.unziptest = true
 
     // 実際に解凍
     try {
@@ -238,25 +249,26 @@ app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate
         console.log("本番解凍エラー")
         try {
             fs.unlinkSync(req.file.path);
-            res.send("Uploaded-UnzipFailed-Deleted")
+            status.delete = true
+            res.send(JSON.stringify(status))
         } catch(error) {
-            res.send("Uploaded-UnzipFailed-DeleteFailed")
+            res.send(JSON.stringify(status))
         }
         return
     }
+    status.unzip = true
 
     // 正常終了後ファイル削除
     try {
         fs.unlinkSync(req.file.path);
         console.log("削除成功")
-        res.send("Uploaded-Success-Deleted")
+        status.delete = true
+        res.send(JSON.stringify(status))
     } catch(error) {
         console.log("削除失敗")
-        res.send("Uploaded-Success-DeleteFailed")
+        res.send(JSON.stringify(status))
     }
 });
-
-// unzip -q -t 61889eeca8b81d3d88f971537d9dd566
 
 function isworking() {
     try {
