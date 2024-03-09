@@ -92,6 +92,7 @@
             <input type="file" name="world" id="file" accept=".mcworld" required><br><br>
         </form>
         <button onclick="upload()">アップロード</button>
+        <progress id="progress" max="1" hidden></progress>
     </div>
 
     <dialog id="modal">
@@ -329,7 +330,9 @@
             }
         });
 
+        // アップロード
         function upload() {
+            const progress_bar = document.getElementById("progress")
             const form = document.getElementById("form1");
             const form_data = new FormData(form);
 
@@ -343,6 +346,9 @@
 
             xhr2.upload.addEventListener('progress', (evt) => {
             // アップロード進行パーセント
+            progress_bar.hidden = false
+            progress_bar.value = evt.loaded / evt.total
+
             const percent = (evt.loaded / evt.total * 100).toFixed(1);
             console.log(`++ xhr2.upload: progress ${percent}%`);
             });
@@ -368,9 +374,17 @@
             });
 
             xhr2.upload.addEventListener('loadend', (evt) => {
-            // アップロード終了 (エラー・正常終了両方)
-            console.log('++ xhr2.upload: loadend (Upload Finished)');
+                // アップロード終了 (エラー・正常終了両方)
+                console.log('++ xhr2.upload: loadend (Upload Finished)');
+                progress_bar.hidden = true
             });
+
+            xhr2.onreadystatechange = function () {
+                if (xhr2.readyState != 4) return;
+
+                const upload_res = JSON.parse(xhr2.responseText);
+                console.log(upload_res)
+            };
 
             xhr2.send(form_data);
         }
