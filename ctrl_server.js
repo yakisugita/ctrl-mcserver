@@ -1,9 +1,10 @@
 const discord = true
 require('dotenv').config()
 const sv_folder = process.env.FOLDER
-const { execSync, exec } = require('child_process')
+const { execSync } = require('child_process')
 
 const express = require("express");
+const app = express();
 const passport = require('passport');
 const passportHttp = require('passport-http');
 
@@ -11,11 +12,9 @@ const fetch = require("node-fetch")
 
 const multer  = require('multer')
 const maxSize = 20*1000*1000; // 上限20MB
-const upload = multer({ dest: './uploads/', limits: {fileSize: maxSize } })
+const upload = multer({ dest: process.env.UPLOAD_FOLDER, limits: {fileSize: maxSize } })
 
 const fs = require('fs');
-
-const app = express();
 
 
 const record = { username: process.env.ID, password: process.env.PASS }

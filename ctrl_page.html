@@ -105,14 +105,15 @@
 
 
     <script>
-        const sub = document.getElementById("sub_content")
+        const sub_content = document.getElementById("sub_content")
         const upload_content = document.getElementById("upload_content")
         function switchsub() {
-            sub.hidden = !sub.hidden
+            sub_content.hidden = !sub_content.hidden
         }
         function switchupload() {
             upload_content.hidden = !upload_content.hidden
         }
+        // 初回ステータス確認
         getstatus()
         function getstatus(server, text_id) {
             const xhr = new XMLHttpRequest();
@@ -131,7 +132,7 @@
                     document.getElementById("status_text").innerHTML=`&#x1F7E2;稼働中 : ${data_obj.status}`
                 }
             };
-            xhr.send()   
+            xhr.send()
         }
 
         function startserver() {
