@@ -394,11 +394,7 @@
                 })
                 upload_text += "</tbody></table>"
 
-                if (Object.values(upload_res) == Array(6).fill(true)) {
-                    openmodal("&#x2705;アップロード", upload_text)
-                } else {
-                    openmodal("&#x274C;アップロード", upload_text)
-                }
+                openmodal("アップロード", upload_text)
             };
 
             xhr2.send(form_data);
