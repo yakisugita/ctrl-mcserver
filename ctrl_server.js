@@ -59,7 +59,15 @@ app.get("/mcserver-ctrl/api/:command/", passport.authenticate('digest', {session
                 } else {
                     execSync(`cd ${sv_folder}\nscreen -dmS bds_sandbox ./bedrock_server`)
                     if (discord) {
-                        postdiscord("鯖起動:white_check_mark: ")
+                        let current_world
+                        try {
+                            // java版はserver.propertiesのlevel-nameを worlds/{ワールド名} にする
+                            const property = execSync(`grep level-name ${sv_folder}/server.properties`)
+                            current_world = property.toString().replace("level-name=","").replace("\n","")
+                        } catch (error) {
+                            console.log(error.message)
+                        }
+                        postdiscord("Server Started", current_world, 0x00a31b)
                     }
                     res.send('{"status":"start"}')
                 }
@@ -75,7 +83,7 @@ app.get("/mcserver-ctrl/api/:command/", passport.authenticate('digest', {session
                     let stdout = execSync("screen -r bds_sandbox -X stuff 'stop\n'")
                     // stuff $'stop\n'だとうまくいかなかった
                     if (discord) {
-                        postdiscord("鯖停止:white_check_mark: ")
+                        postdiscord("Server Stopped", "", 0xdb0000)
                     }
                     res.send('{"status":"stop"}')
                 } else {
@@ -251,10 +259,22 @@ function isworking() {
     }
 }
 
-function postdiscord(text) {
+function postdiscord(text, world, color) {
+    // timestampはUTC時刻だけど、Discord側で調整してくれる
+    const date = new Date()
+    const post_body = {
+        "title": `__${text}__`,
+        "url": process.env.SITE_URL,
+        "color": color,
+        "timestamp": date.toISOString()
+    }
+    if (world != "" && world != null) {
+        post_body["fields"] = [{"name": "world", "value": `\`${world}\``}]
+    }
+    console.log(post_body)
     const options = {
         method: 'POST',
-        body:    JSON.stringify({"username":"マイクラサーバーコンパネ", "content":text}),
+        body:    JSON.stringify({"username":"Controll Panel", "embeds": [post_body]}),
         headers: { 'Content-Type': 'application/json' },
     }
     fetch(process.env.URL, options)
