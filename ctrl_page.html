@@ -374,28 +374,34 @@
             xhr2.upload.addEventListener('loadend', (evt) => {
                 // アップロード終了 (エラー・正常終了両方)
                 console.log('++ xhr2.upload: loadend (Upload Finished)');
-                progress_bar.hidden = true
+                progress_bar.removeAttribute('value')
             });
 
             xhr2.onreadystatechange = function () {
                 if (xhr2.readyState != 4) return;
 
-                const upload_res = JSON.parse(xhr2.responseText);
-                console.log(upload_res)
+                progress_bar.hidden = true
 
-                let upload_text = "<table><tbody>"
-                const upload_res_text = {"upload":"アップロード", "worldname":"ワールド名検証", "unique":"重複チェック", "unziptest":"解凍テスト", "unzip":"解凍", "delete":"一時ファイル削除"}
+                try {
+                    const upload_res = JSON.parse(xhr2.responseText);
+                    console.log(upload_res)
 
-                Object.keys(upload_res_text).forEach((key) => {
-                    if (upload_res[key]) {
-                        upload_text += `<tr><td>${upload_res_text[key]}</td><td>&#x2705;</td></tr>`
-                    } else {
-                        upload_text += `<tr><td>${upload_res_text[key]}</td><td>&#x274C;</td></tr>`
-                    }
-                })
-                upload_text += "</tbody></table>"
+                    let upload_text = "<table><tbody>"
+                    const upload_res_text = {"upload":"アップロード", "worldname":"ワールド名検証", "unique":"重複チェック", "unziptest":"解凍テスト", "unzip":"解凍", "delete":"一時ファイル削除"}
 
-                openmodal("アップロード", upload_text)
+                    Object.keys(upload_res_text).forEach((key) => {
+                        if (upload_res[key]) {
+                            upload_text += `<tr><td>${upload_res_text[key]}</td><td>&#x2705;</td></tr>`
+                        } else {
+                            upload_text += `<tr><td>${upload_res_text[key]}</td><td>&#x274C;</td></tr>`
+                        }
+                    })
+                    upload_text += "</tbody></table>"
+
+                    openmodal("アップロード", upload_text)
+                } catch (err) {
+                    openmodal("アップロード", "失敗しました")
+                }
             };
 
             xhr2.send(form_data);
