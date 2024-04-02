@@ -11,7 +11,7 @@ const passportHttp = require('passport-http');
 const fetch = require("node-fetch")
 
 const multer  = require('multer')
-const maxSize = 20*1000*1000; // 上限20MB
+const maxSize = 40*1000*1000; // 上限40MB
 const upload = multer({ dest: process.env.UPLOAD_FOLDER, limits: {fileSize: maxSize } })
 
 const fs = require('fs');
