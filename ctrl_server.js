@@ -161,7 +161,7 @@ app.get("/mcserver-ctrl/api/:command/", passport.authenticate('digest', {session
 });
 
 app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate('digest', {session: false}), function (req, res, next) {
-    const status = {"upload":false, "filename":false, "unique":false, "unziptest":false, "unzip":false, "delete":false}
+    const status = {"upload":false, "worldname":false, "unique":false, "unziptest":false, "unzip":false, "delete":false}
     console.log(req.file)
     // ファイルがあるかチェック
     if (req.file == undefined) {
@@ -170,12 +170,12 @@ app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate
     }
     status.upload = true
 
-    // ファイル名チェック
+    // ワールド名検証
     console.log(req.body.file_name)
     // 正規表現で英数字,一部記号のみ抽出
     const matched = req.body.file_name.match(/[0-9A-Za-z-_]/g);
     if (matched == null) {
-        console.log("ファイル名空白")
+        console.log("ワールド名空白")
         status.delete = delfile(req.file.path)
         res.send(JSON.stringify(status))
         return
@@ -185,22 +185,22 @@ app.post("/mcserver-ctrl/upload/", upload.single("world"), passport.authenticate
     console.log(world_name);
 
     if (world_name == "") {
-        console.log("ファイル名空白")
+        console.log("ワールド名空白")
         status.delete = delfile(req.file.path)
         res.send(JSON.stringify(status))
         return
     }
-    status.filename = true
+    status.worldname = true
 
     // 重複チェック
     try {
-        execSync(`ls ${sv_folder}/worlds/${world_name}`)
+        const lsout = execSync(`ls ${sv_folder}/worlds/${world_name}`)
         // 重複
         status.delete = delfile(req.file.path)
         res.send(JSON.stringify(status))
         return
     } catch (error) {
-        console.log("重複チェック通過")
+        // console.log("重複チェック通過")
     }
     status.unique = true
 
